@@ -1,6 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import Web3 from "web3";
+import BurnerProvider from "burner-provider";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import Button from "./components/Button";
 import Column from "./components/Column";
@@ -17,7 +18,6 @@ import {
   formatTestTransaction
 } from "./helpers/utilities";
 import { IAssetData } from "./helpers/types";
-import WalletConnectProvider from "./walletconnect-web3-provider";
 import { fonts } from "./styles";
 import { openBox, getProfile } from "./helpers/box";
 
@@ -141,10 +141,10 @@ class App extends React.Component<any, any> {
   };
 
   public onConnect = async () => {
-    const WCP = WalletConnectProvider as any;
-    const provider = new WCP({
-      bridge: "https://bridge.walletconnect.org"
-    });
+    const rpcUrl =
+      "https://mainnet.infura.io/v3/e6e5816422864621b96685a7beb721b9";
+
+    const provider = new BurnerProvider(rpcUrl);
 
     const web3: any = new Web3(provider);
 
