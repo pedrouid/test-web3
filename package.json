@@ -1,0 +1,47 @@
+{
+  "name": "test-web3",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@ethersproject/address": "^5.0.0-beta.125",
+    "@ethersproject/bytes": "^5.0.0-beta.126",
+    "@ethersproject/strings": "^5.0.0-beta.125",
+    "@walletconnect/browser": "^1.0.0-beta.31",
+    "@walletconnect/qrcode-modal": "^1.0.0-beta.31",
+    "@walletconnect/types": "^1.0.0-beta.31",
+    "@walletconnect/utils": "^1.0.0-beta.31",
+    "axios": "^0.18.0",
+    "bignumber.js": "^8.1.1",
+    "ethereumjs-util": "^6.1.0",
+    "prop-types": "^15.7.2",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts-ts": "^4.0.8",
+    "styled-components": "4.2.0",
+    "web3": "^1.2.0",
+    "web3-provider-engine": "github:walletconnect/web3-provider-engine",
+    "xhr2-cookies": "^1.1.0"
+  },
+  "scripts": {
+    "start": "react-scripts-ts start",
+    "build": "react-scripts-ts build",
+    "test": "react-scripts-ts test --env=jsdom",
+    "eject": "react-scripts-ts eject"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.12",
+    "@types/node": "^10.12.18",
+    "@types/prop-types": "^15.5.8",
+    "@types/react": "^16.7.20",
+    "@types/react-dom": "^16.0.12",
+    "@types/styled-components": "4.1.8",
+    "@types/web3": "^1.0.19",
+    "typescript": "^3.2.2"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}
