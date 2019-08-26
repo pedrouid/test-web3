@@ -121,7 +121,7 @@ interface IAppState {
   assets: IAssetData[];
   showModal: boolean;
   pendingRequest: boolean;
-  useEthProvider: boolean;
+  activeProvider: string;
   result: any | null;
 }
 
@@ -135,8 +135,13 @@ const INITIAL_STATE: IAppState = {
   assets: [],
   showModal: false,
   pendingRequest: false,
-  useEthProvider: false,
+  activeProvider: "web3-provider",
   result: null
+};
+
+const PROVIDERS = {
+  WEB3: "web3-provider",
+  ETH: "eth-provider"
 };
 
 class App extends React.Component<any, any> {
@@ -144,24 +149,49 @@ class App extends React.Component<any, any> {
     ...INITIAL_STATE
   };
 
-  public onConnect = async () => {
-    const WCP = this.state.useEthProvider
-      ? (WalletConnectEthProvider as any)
-      : (WalletConnectWeb3Provider as any);
+  public getWalletConnectProvider = () => {
+    let WalletConnectProvider = null;
+    switch (this.state.activeProvider) {
+      case PROVIDERS.WEB3:
+        WalletConnectProvider = WalletConnectWeb3Provider as any;
+        break;
+      case PROVIDERS.ETH:
+        WalletConnectProvider = WalletConnectEthProvider as any;
+        break;
+      default:
+        break;
+    }
+    if (!WalletConnectProvider) {
+      throw new Error("Failed to get WalletConnectProvider library");
+    }
+    return WalletConnectProvider;
+  };
 
-    const opts = this.state.useEthProvider
-      ? {
-          infuraId: process.env.REACT_APP_INFURA_ID
-        }
-      : {
-          bridge: "https://bridge.walletconnect.org"
-        };
+  public onConnect = async () => {
+    const WalletConnectProvider = this.getWalletConnectProvider();
+
+    const opts = { infuraId: process.env.REACT_APP_INFURA_ID };
 
     console.log("[onConnect]", "opts", opts); // tslint:disable-line
 
-    const provider = new WCP(opts);
+    const provider = new WalletConnectProvider(opts);
 
     console.log("[onConnect]", "provider", provider); // tslint:disable-line
+
+    await provider.enable();
+
+    provider.on("accountsChanged", (accounts: string[]) => {
+      this.setState({ address: accounts[0] });
+      this.getAccountAssets();
+    });
+    provider.on("chainChanged", (chainId: number) => {
+      this.setState({ chainId });
+      this.getAccountAssets();
+    });
+    provider.on("networkChanged", (networkId: number) => {
+      this.setState({ networkId });
+      this.getAccountAssets();
+    });
 
     const web3: any = new Web3(provider);
 
@@ -407,10 +437,7 @@ class App extends React.Component<any, any> {
   public resetApp = async () => {
     const { web3 } = this.state;
     if (web3 && web3.currentProvider) {
-      await web3.currentProvider.sendAsync({
-        method: "wc_killSession",
-        params: []
-      });
+      await web3.currentProvider.close();
     }
     this.setState({ ...INITIAL_STATE });
   };
@@ -472,19 +499,20 @@ class App extends React.Component<any, any> {
               <SLanding center>
                 <Column center>
                   <STestButtonContainer>
-                    <STestButton
-                      outline={!this.state.useEthProvider}
-                      onClick={() => this.setState({ useEthProvider: false })}
-                    >
-                      {"web3-provider"}
-                    </STestButton>
-
-                    <STestButton
-                      outline={this.state.useEthProvider}
-                      onClick={() => this.setState({ useEthProvider: true })}
-                    >
-                      {"eth-provider"}
-                    </STestButton>
+                    {Object.keys(PROVIDERS).map(key => {
+                      const providerOption = PROVIDERS[key];
+                      return (
+                        <STestButton
+                          key={providerOption}
+                          outline={this.state.activeProvider === providerOption}
+                          onClick={() =>
+                            this.setState({ activeProvider: providerOption })
+                          }
+                        >
+                          {providerOption}
+                        </STestButton>
+                      );
+                    })}
                   </STestButtonContainer>
                 </Column>
                 <h3>{`Test Web3`}</h3>
