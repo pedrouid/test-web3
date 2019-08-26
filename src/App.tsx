@@ -17,10 +17,11 @@ import {
   formatTestTransaction
 } from "./helpers/utilities";
 import { IAssetData } from "./helpers/types";
-// import WalletConnectEthProvider from "./walletconnect-eth-provider";
+import WalletConnectEthProvider from "./walletconnect-eth-provider";
 import WalletConnectWeb3Provider from "./walletconnect-web3-provider";
 import { fonts } from "./styles";
 // import { openBox, getProfile } from "./helpers/box";
+import { DAI_CONTRACT } from "./constants/contracts";
 
 const SLayout = styled.div`
   position: relative;
@@ -120,6 +121,7 @@ interface IAppState {
   assets: IAssetData[];
   showModal: boolean;
   pendingRequest: boolean;
+  useEthProvider: boolean;
   result: any | null;
 }
 
@@ -133,6 +135,7 @@ const INITIAL_STATE: IAppState = {
   assets: [],
   showModal: false,
   pendingRequest: false,
+  useEthProvider: false,
   result: null
 };
 
@@ -142,10 +145,23 @@ class App extends React.Component<any, any> {
   };
 
   public onConnect = async () => {
-    const WCP = WalletConnectWeb3Provider as any;
-    const provider = new WCP({
-      bridge: "https://bridge.walletconnect.org"
-    });
+    const WCP = this.state.useEthProvider
+      ? (WalletConnectEthProvider as any)
+      : (WalletConnectWeb3Provider as any);
+
+    const opts = this.state.useEthProvider
+      ? {
+          infuraId: process.env.REACT_APP_INFURA_ID
+        }
+      : {
+          bridge: "https://bridge.walletconnect.org"
+        };
+
+    console.log("[onConnect]", "opts", opts); // tslint:disable-line
+
+    const provider = new WCP(opts);
+
+    console.log("[onConnect]", "provider", provider); // tslint:disable-line
 
     const web3: any = new Web3(provider);
 
@@ -205,6 +221,42 @@ class App extends React.Component<any, any> {
 
   public toggleModal = () =>
     this.setState({ showModal: !this.state.showModal });
+
+  public testContractCall = async () => {
+    const { web3, address, chainId } = this.state;
+
+    console.log("[testContractCall]", "address", address); // tslint:disable-line
+
+    console.log("[testContractCall]", "chainId", chainId); // tslint:disable-line
+
+    console.log("[testContractCall]", "DAI_CONTRACT", DAI_CONTRACT); // tslint:disable-line
+
+    const dai = new web3.eth.Contract(
+      DAI_CONTRACT[chainId].abi,
+      DAI_CONTRACT[chainId].address
+    );
+
+    console.log("[testContractCall]", "dai", dai); // tslint:disable-line
+
+    console.log("[testContractCall]", "BEFORE"); // tslint:disable-line
+
+    const daiBalance = await dai.methods
+      .balanceOf(address)
+      .call(
+        { from: "0x0000000000000000000000000000000000000000" },
+        (err: any, data: any) => {
+          if (err) {
+            console.error(err); // tslint:disable-line
+          }
+
+          console.log("[testContractCall]", "data", data); // tslint:disable-line
+        }
+      );
+
+    console.log("[testContractCall]", "AFTER"); // tslint:disable-line
+
+    console.log("[testContractCall]", "daiBalance", daiBalance); // tslint:disable-line
+  };
 
   public testSendTransaction = async () => {
     const { web3, address, chainId } = this.state;
@@ -407,6 +459,10 @@ class App extends React.Component<any, any> {
                     <STestButton left onClick={this.testSignPersonalMessage}>
                       {"personal_sign"}
                     </STestButton>
+
+                    <STestButton left onClick={this.testContractCall}>
+                      {"eth_call"}
+                    </STestButton>
                   </STestButtonContainer>
                 </Column>
                 <h3>Balances</h3>
@@ -414,6 +470,23 @@ class App extends React.Component<any, any> {
               </SBalances>
             ) : (
               <SLanding center>
+                <Column center>
+                  <STestButtonContainer>
+                    <STestButton
+                      outline={!this.state.useEthProvider}
+                      onClick={() => this.setState({ useEthProvider: false })}
+                    >
+                      {"web3-provider"}
+                    </STestButton>
+
+                    <STestButton
+                      outline={this.state.useEthProvider}
+                      onClick={() => this.setState({ useEthProvider: true })}
+                    >
+                      {"eth-provider"}
+                    </STestButton>
+                  </STestButtonContainer>
+                </Column>
                 <h3>{`Test Web3`}</h3>
                 <Button onClick={this.onConnect}>{`Connect`}</Button>
               </SLanding>
