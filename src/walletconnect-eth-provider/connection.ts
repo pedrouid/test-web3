@@ -1,12 +1,16 @@
 import EventEmitter from "events";
-import { convertNumberToHex, signingMethods, stateMethods } from "./utils";
-import WalletConnect from "@walletconnect/browser";
-import WCQRCode from "@walletconnect/qrcode-modal";
+import {
+  convertNumberToHex,
+  signingMethods,
+  stateMethods
+} from "../walletconnect/utils";
+import WalletConnect from "../walletconnect";
+import WCQRCode from "../walletconnect/qrcode-modal";
 import HTTPConnection from "./http";
 import {
   ISessionParams,
   IWalletConnectConnectionOptions
-} from "@walletconnect/types";
+} from "../walletconnect/types";
 
 // -- WalletConnectConnection --------------------------------------------- //
 
@@ -135,7 +139,7 @@ class WalletConnectConnection extends EventEmitter {
         this.emit("payload", response);
       } else {
         if (this.http) {
-          await this.http.send(payload);
+          this.http.send(payload);
         } else {
           this.error(payload, "HTTP Connection not available");
         }

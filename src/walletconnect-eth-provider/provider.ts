@@ -5,8 +5,8 @@ import {
   isJsonRpcRequest,
   isJsonRpcResponseSuccess,
   isJsonRpcResponseError
-} from "@walletconnect/utils";
-import { IError, JsonRpc } from "@walletconnect/types";
+} from "../walletconnect/utils";
+import { IError, JsonRpc } from "../walletconnect/types";
 import WalletConnectConnection from "./connection";
 
 // -- types ---------------------------------------------------------------- //

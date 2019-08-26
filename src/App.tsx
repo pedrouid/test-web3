@@ -17,7 +17,8 @@ import {
   formatTestTransaction
 } from "./helpers/utilities";
 import { IAssetData } from "./helpers/types";
-import WalletConnectProvider from "./walletconnect-web3-provider";
+import WalletConnectEthProvider from "./walletconnect-eth-provider";
+import WalletConnectWeb3Provider from "./walletconnect-web3-provider";
 import { fonts } from "./styles";
 import { openBox, getProfile } from "./helpers/box";
 
@@ -141,7 +142,7 @@ class App extends React.Component<any, any> {
   };
 
   public onConnect = async () => {
-    const WCP = WalletConnectProvider as any;
+    const WCP = WalletConnectWeb3Provider as any;
     const provider = new WCP({
       bridge: "https://bridge.walletconnect.org"
     });

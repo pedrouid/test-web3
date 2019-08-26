@@ -20,7 +20,7 @@ import {
   IJsonRpcErrorMessage,
   IInternalEvent,
   IWalletConnectSession
-} from "@walletconnect/types";
+} from "../walletconnect/types";
 
 // -- ArrayBuffer ------------------------------------------ //
 
