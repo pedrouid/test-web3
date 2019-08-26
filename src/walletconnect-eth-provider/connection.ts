@@ -5,7 +5,7 @@ import {
   stateMethods
 } from "../walletconnect/utils";
 import WalletConnect from "../walletconnect";
-import WCQRCode from "../walletconnect/qrcode-modal";
+import WCQRCode from "@walletconnect/qrcode-modal";
 import HTTPConnection from "./http";
 import {
   ISessionParams,

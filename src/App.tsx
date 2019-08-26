@@ -17,10 +17,10 @@ import {
   formatTestTransaction
 } from "./helpers/utilities";
 import { IAssetData } from "./helpers/types";
-import WalletConnectEthProvider from "./walletconnect-eth-provider";
+// import WalletConnectEthProvider from "./walletconnect-eth-provider";
 import WalletConnectWeb3Provider from "./walletconnect-web3-provider";
 import { fonts } from "./styles";
-import { openBox, getProfile } from "./helpers/box";
+// import { openBox, getProfile } from "./helpers/box";
 
 const SLayout = styled.div`
   position: relative;
@@ -173,11 +173,11 @@ class App extends React.Component<any, any> {
 
     window.web3Test = web3;
 
-    await openBox(address, provider, async () => {
-      console.log("3BOX IS SYNCED"); // tslint:disable-line
-      const profile = await getProfile(address);
-      console.log("3BOX ====> profile", profile); // tslint:disable-line
-    });
+    // await openBox(address, provider, async () => {
+    //   console.log("3BOX IS SYNCED"); // tslint:disable-line
+    //   const profile = await getProfile(address);
+    //   console.log("3BOX ====> profile", profile); // tslint:disable-line
+    // });
 
     await this.setState({
       web3,
