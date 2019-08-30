@@ -20,7 +20,7 @@ import { IAssetData } from "./helpers/types";
 import WalletConnectEthProvider from "./walletconnect-eth-provider";
 import WalletConnectWeb3Provider from "./walletconnect-web3-provider";
 import { fonts } from "./styles";
-// import { openBox, getProfile } from "./helpers/box";
+import { openBox, getProfile } from "./helpers/box";
 import { DAI_CONTRACT } from "./constants/contracts";
 
 const SLayout = styled.div`
@@ -115,6 +115,7 @@ interface IAppState {
   fetching: boolean;
   address: string;
   web3: any;
+  provider: any;
   connected: boolean;
   chainId: number;
   networkId: number;
@@ -129,6 +130,7 @@ const INITIAL_STATE: IAppState = {
   fetching: false,
   address: "",
   web3: null,
+  provider: null,
   connected: false,
   chainId: 1,
   networkId: 1,
@@ -143,6 +145,58 @@ const PROVIDERS = {
   WEB3: "web3-provider",
   ETH: "eth-provider"
 };
+
+function getDaiContract(chainId: number, web3: any) {
+  const dai = new web3.eth.Contract(
+    DAI_CONTRACT[chainId].abi,
+    DAI_CONTRACT[chainId].address
+  );
+  return dai;
+}
+
+const FUNCTION_BALANCE_OF = "balanceOf";
+
+function callBalanceOf(address: string, chainId: number, web3: any) {
+  return new Promise(async (resolve, reject) => {
+    const dai = getDaiContract(chainId, web3);
+
+    await dai.methods
+      .balanceOf(address)
+      .call(
+        { from: "0x0000000000000000000000000000000000000000" },
+        (err: any, data: any) => {
+          if (err) {
+            reject(err);
+          }
+
+          resolve(data);
+        }
+      );
+  });
+}
+
+const FUNCTION_TRANSFER = "transfer";
+
+function callTransfer(address: string, chainId: number, web3: any) {
+  return new Promise(async (resolve, reject) => {
+    const dai = getDaiContract(chainId, web3);
+
+    await dai.methods.transfer(address, "10000000000000000").send(
+      {
+        from: address,
+        value: 0,
+        gasLimit: 80000
+      },
+      (err: any, data: any) => {
+        if (err) {
+          reject(err);
+        }
+
+        resolve(data);
+      }
+    );
+  });
+}
 
 class App extends React.Component<any, any> {
   public state: IAppState = {
@@ -219,14 +273,9 @@ class App extends React.Component<any, any> {
 
     window.web3Test = web3;
 
-    // await openBox(address, provider, async () => {
-    //   console.log("3BOX IS SYNCED"); // tslint:disable-line
-    //   const profile = await getProfile(address);
-    //   console.log("3BOX ====> profile", profile); // tslint:disable-line
-    // });
-
     await this.setState({
       web3,
+      provider,
       connected: true,
       address,
       chainId,
@@ -252,40 +301,96 @@ class App extends React.Component<any, any> {
   public toggleModal = () =>
     this.setState({ showModal: !this.state.showModal });
 
-  public testContractCall = async () => {
-    const { web3, address, chainId } = this.state;
-
-    console.log("[testContractCall]", "address", address); // tslint:disable-line
-
-    console.log("[testContractCall]", "chainId", chainId); // tslint:disable-line
-
-    console.log("[testContractCall]", "DAI_CONTRACT", DAI_CONTRACT); // tslint:disable-line
-
-    const dai = new web3.eth.Contract(
-      DAI_CONTRACT[chainId].abi,
-      DAI_CONTRACT[chainId].address
-    );
-
-    console.log("[testContractCall]", "dai", dai); // tslint:disable-line
-
-    console.log("[testContractCall]", "BEFORE"); // tslint:disable-line
-
-    const daiBalance = await dai.methods
-      .balanceOf(address)
-      .call(
-        { from: "0x0000000000000000000000000000000000000000" },
-        (err: any, data: any) => {
-          if (err) {
-            console.error(err); // tslint:disable-line
-          }
-
-          console.log("[testContractCall]", "data", data); // tslint:disable-line
+  public testOpenBox = async () => {
+    function getBoxProfile(address: string, provider: any) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          await openBox(address, provider, async () => {
+            const profile = await getProfile(address);
+            resolve(profile);
+          });
+        } catch (error) {
+          reject(error);
         }
+      });
+    }
+
+    const { address, provider } = this.state;
+
+    try {
+      // open modal
+      this.toggleModal();
+
+      // toggle pending request indicator
+      this.setState({ pendingRequest: true });
+
+      // send transaction
+      const result = await getBoxProfile(address, provider);
+
+      // format displayed result
+      const formattedResult = {
+        method: "box_open",
+        result
+      };
+
+      // display result
+      this.setState({
+        pendingRequest: false,
+        result: formattedResult || null
+      });
+    } catch (error) {
+      console.error(error); // tslint:disable-line
+      this.setState({ pendingRequest: false, result: null });
+    }
+  };
+
+  public testContractCall = async (functionSig: string) => {
+    let contractCall = null;
+    switch (functionSig) {
+      case FUNCTION_BALANCE_OF:
+        contractCall = callBalanceOf;
+        break;
+      case FUNCTION_TRANSFER:
+        contractCall = callTransfer;
+        break;
+
+      default:
+        break;
+    }
+
+    if (!contractCall) {
+      throw new Error(
+        `No matching contract calls for functionSig=${functionSig}`
       );
+    }
 
-    console.log("[testContractCall]", "AFTER"); // tslint:disable-line
+    const { web3, address, chainId } = this.state;
+    try {
+      // open modal
+      this.toggleModal();
 
-    console.log("[testContractCall]", "daiBalance", daiBalance); // tslint:disable-line
+      // toggle pending request indicator
+      this.setState({ pendingRequest: true });
+
+      // send transaction
+      const result = await contractCall(address, chainId, web3);
+
+      // format displayed result
+      const formattedResult = {
+        method: functionSig,
+        result
+      };
+
+      // display result
+      this.setState({
+        web3,
+        pendingRequest: false,
+        result: formattedResult || null
+      });
+    } catch (error) {
+      console.error(error); // tslint:disable-line
+      this.setState({ web3, pendingRequest: false, result: null });
+    }
   };
 
   public testSendTransaction = async () => {
@@ -487,8 +592,22 @@ class App extends React.Component<any, any> {
                       {"personal_sign"}
                     </STestButton>
 
-                    <STestButton left onClick={this.testContractCall}>
-                      {"eth_call"}
+                    <STestButton
+                      left
+                      onClick={() => this.testContractCall(FUNCTION_BALANCE_OF)}
+                    >
+                      {FUNCTION_BALANCE_OF}
+                    </STestButton>
+
+                    <STestButton
+                      left
+                      onClick={() => this.testContractCall(FUNCTION_TRANSFER)}
+                    >
+                      {FUNCTION_TRANSFER}
+                    </STestButton>
+
+                    <STestButton left onClick={this.testOpenBox}>
+                      {"box_open"}
                     </STestButton>
                   </STestButtonContainer>
                 </Column>

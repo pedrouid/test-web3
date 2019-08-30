@@ -1,6 +1,5 @@
 import EventEmitter from "events";
 import { XMLHttpRequest } from "xhr2-cookies";
-import { uuid } from "../walletconnect/utils";
 
 // -- global -------------------------------------------------------------- //
 const wwindow = window;

@@ -58,7 +58,6 @@ class WalletConnectProvider extends ProviderEngine {
     this.addProvider(
       new HookedWalletSubprovider({
         getAccounts: async cb => {
-          console.log("[getAccounts]"); // tslint:disable-line
           try {
             const wc = await this.getWalletConnector();
             const accounts = wc.accounts;
@@ -72,7 +71,6 @@ class WalletConnectProvider extends ProviderEngine {
           }
         },
         processMessage: async (msgParams, cb) => {
-          console.log("[processMessage] msgParams", msgParams); // tslint:disable-line
           try {
             const wc = await this.getWalletConnector();
             const result = await wc.signMessage([
@@ -85,7 +83,6 @@ class WalletConnectProvider extends ProviderEngine {
           }
         },
         processPersonalMessage: async (msgParams, cb) => {
-          console.log("[processPersonalMessage] msgParams", msgParams); // tslint:disable-line
           try {
             const wc = await this.getWalletConnector();
             const result = await wc.signPersonalMessage([
@@ -98,7 +95,6 @@ class WalletConnectProvider extends ProviderEngine {
           }
         },
         processSignTransaction: async (txParams, cb) => {
-          console.log("[processSignTransaction] txParams", txParams); // tslint:disable-line
           try {
             const wc = await this.getWalletConnector();
             const result = await wc.signTransaction(txParams);
@@ -108,7 +104,6 @@ class WalletConnectProvider extends ProviderEngine {
           }
         },
         processTransaction: async (txParams, cb) => {
-          console.log("[processTransaction] txParams", txParams); // tslint:disable-line
           try {
             const wc = await this.getWalletConnector();
             const result = await wc.sendTransaction(txParams);
@@ -118,7 +113,6 @@ class WalletConnectProvider extends ProviderEngine {
           }
         },
         processTypedMessage: async (msgParams, cb) => {
-          console.log("[processTypedMessage] msgParams", msgParams); // tslint:disable-line
           try {
             const wc = await this.getWalletConnector();
             const result = await wc.signTypedData([
@@ -135,10 +129,8 @@ class WalletConnectProvider extends ProviderEngine {
 
     this.addProvider({
       handleRequest: async (payload, next, end) => {
-        console.log("[handleRequest] payload", payload); // tslint:disable-line
         try {
           const { result } = await this.handleRequest(payload);
-          console.log("[handleRequest] result", result); // tslint:disable-line
           end(null, result);
         } catch (error) {
           end(error);
@@ -150,7 +142,6 @@ class WalletConnectProvider extends ProviderEngine {
 
   enable() {
     return new Promise(async (resolve, reject) => {
-      console.log("[this.enable]"); // tslint:disable-line
       try {
         const wc = await this.getWalletConnector();
         if (wc) {
@@ -167,7 +158,6 @@ class WalletConnectProvider extends ProviderEngine {
   }
 
   async send(payload, callback) {
-    console.log("[send] payload", payload); // tslint:disable-line
     // Web3 1.0 beta.38 (and above) calls `send` with method and parameters
     if (typeof payload === "string") {
       return new Promise((resolve, reject) => {
@@ -201,12 +191,10 @@ class WalletConnectProvider extends ProviderEngine {
   }
 
   onConnect(callback) {
-    console.log("onConnect"); // tslint:disable-line
     this.connectCallbacks.push(callback);
   }
 
   triggerConnect(result) {
-    console.log("triggerConnect"); // tslint:disable-line
     if (this.connectCallbacks && this.connectCallbacks.length) {
       this.connectCallbacks.forEach(callback => callback(result));
     }
@@ -251,17 +239,30 @@ class WalletConnectProvider extends ProviderEngine {
           break;
 
         default:
-          return this.handleReadRequests(payload);
+          return this.handleOtherRequests(payload);
       }
     } catch (error) {
       throw error;
     }
 
+    return this.formatResponse(payload, result);
+  }
+
+  formatResponse(payload, result) {
     return {
       id: payload.id,
       jsonrpc: payload.jsonrpc,
       result: result
     };
+  }
+
+  async handleOtherRequests(payload) {
+    if (payload.method.startsWith("eth_")) {
+      return this.handleReadRequests(payload);
+    }
+    const wc = await this.getWalletConnector();
+    const result = await wc.sendCustomRequest(payload);
+    return this.formatResponse(payload, result);
   }
 
   async handleReadRequests(payload) {
@@ -272,10 +273,8 @@ class WalletConnectProvider extends ProviderEngine {
   }
 
   getWalletConnector() {
-    console.log("[getWalletConnector]"); // tslint:disable-line
     return new Promise((resolve, reject) => {
       const wc = this.wc;
-      console.log("[getWalletConnector] isConnecting", this.isConnecting); // tslint:disable-line
 
       if (this.isConnecting) {
         this.onConnect(x => resolve(x));
@@ -294,7 +293,6 @@ class WalletConnectProvider extends ProviderEngine {
               }
               this.isConnecting = false;
 
-              console.log("[getWalletConnector] payload", payload); // tslint:disable-line
               if (payload) {
                 // Handle session update
                 this.updateState(payload.params[0]);
@@ -338,8 +336,6 @@ class WalletConnectProvider extends ProviderEngine {
   }
 
   async updateState(sessionParams) {
-    console.log("[updateState]", "sessionParams", sessionParams); // tslint:disable-line
-
     const { accounts, chainId, networkId, rpcUrl } = sessionParams;
 
     // Check if accounts changed and trigger event
