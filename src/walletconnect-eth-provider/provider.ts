@@ -5,8 +5,8 @@ import {
   isJsonRpcRequest,
   isJsonRpcResponseSuccess,
   isJsonRpcResponseError
-} from "../walletconnect/utils";
-import { IError, JsonRpc } from "../walletconnect/types";
+} from "@walletconnect/utils";
+import { JsonRpc } from "@walletconnect/types";
 import WalletConnectConnection from "./connection";
 
 // -- types ---------------------------------------------------------------- //
@@ -52,7 +52,7 @@ class EthereumProvider extends EventEmitter {
   }
   public async onConnectionPayload(payload: JsonRpc) {
     const { id } = payload;
-    if (typeof id !== "undefined") {
+    if (typeof id !== "undefined" && typeof this.promises !== "undefined") {
       if (this.promises[id]) {
         if (isJsonRpcResponseError(payload)) {
           this.promises[id].reject(payload.error);
@@ -138,21 +138,21 @@ class EthereumProvider extends EventEmitter {
     }
   }
   public enable() {
-    return new Promise((resolve, reject) => {
-      this._send("eth_accounts")
-        .then((accounts: string[]) => {
-          if (accounts.length > 0) {
-            this.accounts = accounts;
-            this.coinbase = accounts[0];
-            this.emit("enable");
-            resolve(accounts);
-          } else {
-            const err: IError = new Error("User Denied Full Provider");
-            err.code = 4001;
-            reject(err);
-          }
-        })
-        .catch(reject);
+    return new Promise(async (resolve, reject) => {
+      try {
+        await this.connection.create();
+        if (this.connection.wc) {
+          const accounts = this.connection.wc.accounts;
+          this.accounts = accounts;
+          this.coinbase = accounts[0];
+          this.emit("enable");
+          resolve(accounts);
+        } else {
+          return reject(new Error("Failed to connect to WalleConnect"));
+        }
+      } catch (error) {
+        return reject(error);
+      }
     });
   }
   public _send(method?: string, params: any[] = []) {

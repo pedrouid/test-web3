@@ -1,6 +1,6 @@
 import EthereumProvider from "./provider";
 import WalletConnectConnection from "./connection";
-import { IWalletConnectConnectionOptions } from "../walletconnect/types";
+import { IWalletConnectConnectionOptions } from "@walletconnect/types";
 
 class WalletConnectProvider extends EthereumProvider {
   constructor(opts: IWalletConnectConnectionOptions) {

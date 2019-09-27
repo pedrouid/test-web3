@@ -20,7 +20,7 @@ import {
   IJsonRpcErrorMessage,
   IInternalEvent,
   IWalletConnectSession
-} from "./types";
+} from "@walletconnect/types";
 
 // -- ArrayBuffer ------------------------------------------ //
 
@@ -192,6 +192,13 @@ export function removeHexPrefix(hex: string): string {
   if (hex.toLowerCase().substring(0, 2) === "0x") {
     return hex.substring(2);
   }
+  return hex;
+}
+
+export function removeHexLeadingZeros(hex: string): string {
+  hex = removeHexPrefix(hex);
+  hex = hex.startsWith("0") ? hex.substring(1) : hex;
+  hex = addHexPrefix(hex);
   return hex;
 }
 
@@ -497,6 +504,9 @@ export function parseTransactionData(
       } else if (typeof value === "string") {
         result = sanitizeHex(value);
       }
+    }
+    if (typeof result === "string") {
+      result = removeHexLeadingZeros(result);
     }
     return result;
   }

@@ -242,8 +242,14 @@ export interface IUpdateChainParams {
   };
 }
 
+export interface IRPCMap {
+  [chainId: number]: string;
+}
+
 export interface IWalletConnectConnectionOptions {
   bridge?: string;
   qrcode?: boolean;
-  infuraId: string;
+  chainId?: number;
+  rpc?: IRPCMap;
+  infuraId?: string;
 }

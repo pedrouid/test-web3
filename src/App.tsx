@@ -18,7 +18,10 @@ import {
 } from "./helpers/utilities";
 import { IAssetData } from "./helpers/types";
 import WalletConnectEthProvider from "./walletconnect-eth-provider";
+// import WalletConnectEthProvider from "@walletconnect/eth-provider";
 import WalletConnectWeb3Provider from "./walletconnect-web3-provider";
+// @ts-ignore
+// import WalletConnectWeb3Provider from "@walletconnect/web3-provider";
 import { fonts } from "./styles";
 import { openBox, getProfile } from "./helpers/box";
 import { DAI_CONTRACT } from "./constants/contracts";
@@ -224,7 +227,19 @@ class App extends React.Component<any, any> {
   public onConnect = async () => {
     const WalletConnectProvider = this.getWalletConnectProvider();
 
-    const opts = { infuraId: process.env.REACT_APP_INFURA_ID };
+    // const opts = { infuraId: process.env.REACT_APP_INFURA_ID };
+
+    const opts = {
+      rpc: {
+        1: "https://ethereum-api.xyz/rpc?chainId=1",
+        3: "https://ethereum-api.xyz/rpc?chainId=3",
+        4: "https://ethereum-api.xyz/rpc?chainId=4",
+        5: "https://ethereum-api.xyz/rpc?chainId=5",
+        42: "https://ethereum-api.xyz/rpc?chainId=42"
+      }
+    };
+
+    // const opts = { disableRpc: true }
 
     console.log("[onConnect]", "opts", opts); // tslint:disable-line
 
