@@ -1,9 +1,9 @@
 {
   "name": "test-web3",
-  "version": "1.0.0-beta.42",
+  "version": "1.0.0-next.0",
   "private": true,
   "dependencies": {
-    "@walletconnect/web3-provider": "^1.0.0-beta.42",
+    "@walletconnect/web3-provider": "^1.0.0-next.0",
     "axios": "^0.19.1",
     "bignumber.js": "^9.0.0",
     "ethereumjs-util": "^6.1.0",
