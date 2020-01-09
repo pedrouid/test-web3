@@ -17,14 +17,12 @@ import {
   formatTestTransaction
 } from "./helpers/utilities";
 import { IAssetData } from "./helpers/types";
-import WalletConnectEthProvider from "./walletconnect-eth-provider";
-// import WalletConnectEthProvider from "@walletconnect/eth-provider";
-import WalletConnectWeb3Provider from "./walletconnect-web3-provider";
 // @ts-ignore
-// import WalletConnectWeb3Provider from "@walletconnect/web3-provider";
+import WalletConnectWeb3Provider from "@walletconnect/web3-provider";
 import { fonts } from "./styles";
 import { openBox, getProfile } from "./helpers/box";
-import { DAI_CONTRACT } from "./constants/contracts";
+import { FUNCTION_BALANCE_OF, FUNCTION_TRANSFER } from "./constants";
+import { callBalanceOf, callTransfer } from "./helpers/web3";
 
 const SLayout = styled.div`
   position: relative;
@@ -149,58 +147,6 @@ const PROVIDERS = {
   ETH: "eth-provider"
 };
 
-function getDaiContract(chainId: number, web3: any) {
-  const dai = new web3.eth.Contract(
-    DAI_CONTRACT[chainId].abi,
-    DAI_CONTRACT[chainId].address
-  );
-  return dai;
-}
-
-const FUNCTION_BALANCE_OF = "balanceOf";
-
-function callBalanceOf(address: string, chainId: number, web3: any) {
-  return new Promise(async (resolve, reject) => {
-    const dai = getDaiContract(chainId, web3);
-
-    await dai.methods
-      .balanceOf(address)
-      .call(
-        { from: "0x0000000000000000000000000000000000000000" },
-        (err: any, data: any) => {
-          if (err) {
-            reject(err);
-          }
-
-          resolve(data);
-        }
-      );
-  });
-}
-
-const FUNCTION_TRANSFER = "transfer";
-
-function callTransfer(address: string, chainId: number, web3: any) {
-  return new Promise(async (resolve, reject) => {
-    const dai = getDaiContract(chainId, web3);
-
-    await dai.methods.transfer(address, "10000000000000000").send(
-      {
-        from: address,
-        value: 0,
-        gasLimit: 80000
-      },
-      (err: any, data: any) => {
-        if (err) {
-          reject(err);
-        }
-
-        resolve(data);
-      }
-    );
-  });
-}
-
 class App extends React.Component<any, any> {
   public state: IAppState = {
     ...INITIAL_STATE
@@ -211,9 +157,6 @@ class App extends React.Component<any, any> {
     switch (this.state.activeProvider) {
       case PROVIDERS.WEB3:
         WalletConnectProvider = WalletConnectWeb3Provider as any;
-        break;
-      case PROVIDERS.ETH:
-        WalletConnectProvider = WalletConnectEthProvider as any;
         break;
       default:
         break;
